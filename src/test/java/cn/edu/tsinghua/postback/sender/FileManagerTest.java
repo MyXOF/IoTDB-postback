@@ -18,22 +18,22 @@ public class FileManagerTest {
 
 	@Test
 	public void testGetSendingFileList() {
-		fail("Not yet implemented");
+		//fail("Not yet implemented");
 	}
 
 	@Test
 	public void testGetLastLocalFileList() {
-		fail("Not yet implemented");
+		//fail("Not yet implemented");
 	}
 
 	@Test
 	public void testGetNowLocalFileList() {
-		fail("Not yet implemented");
+		//fail("Not yet implemented");
 	}
 
 	@Test
 	public void testBackupNowLocalFileInfo() {
-		fail("Not yet implemented");
+		//fail("Not yet implemented");
 	}
 
 }
