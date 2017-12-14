@@ -32,10 +32,9 @@ public class FileManager {
 		return FileManagerHolder.INSTANCE;
 	}
 
-	public List<String> getSendingFileList() {
+	public List<String> getSendingFileList(Set<String> oldFiles, Set<String> newFiles) {
 		List<String> sendingFiles = new ArrayList<>();
-		Set<String> oldFiles = getlastLocalFileList();
-		for(String newFile : getNowLocalFileList()) {
+		for(String newFile : newFiles) {
 			if(!oldFiles.contains(newFile)) {
 				sendingFiles.add(newFile);
 			}
@@ -43,9 +42,9 @@ public class FileManager {
 		return sendingFiles;
 	}
 
-	public Set<String> getlastLocalFileList()  {
+	public Set<String> getLastLocalFileList(String path)  {
 		Set<String> fileList = new HashSet<>();
-		File file = new File(Config.LAST_FILE_INFO);
+		File file = new File(path);
 		try {
 			if (!file.exists()) {
 				file.createNewFile();
@@ -72,9 +71,9 @@ public class FileManager {
 		return fileList;
 	}
 
-	public Set<String> getNowLocalFileList() {
+	public Set<String> getNowLocalFileList(String path) {
 		Set<String> fileList = new HashSet<>();
-		try (Stream<Path> filePathStream = Files.walk(Paths.get(Config.SENDER_FILE_PATH))) {
+		try (Stream<Path> filePathStream = Files.walk(Paths.get(path))) {
 			filePathStream.filter(Files::isRegularFile);
 			// TODO filter correct file
 			filePathStream.forEach(filePath -> {
@@ -86,11 +85,11 @@ public class FileManager {
 		return fileList;
 	}
 
-	public void backupNowLocalFileInfo() {
+	public void backupNowLocalFileInfo(String dataDirectory, String backupFile) {
 		BufferedWriter bufferedWriter = null;
 		try {
-			bufferedWriter = new BufferedWriter(new FileWriter(Config.LAST_FILE_INFO));
-			for(String file : getNowLocalFileList()) {
+			bufferedWriter = new BufferedWriter(new FileWriter(backupFile));
+			for(String file : getNowLocalFileList(dataDirectory)) {
 				bufferedWriter.write(file+"\n");
 			}
 		} catch (IOException e) {

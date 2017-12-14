@@ -10,32 +10,30 @@ public class FileManagerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		System.out.println(1);
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		System.out.println(2);
 	}
 
 	@Test
 	public void testGetSendingFileList() {
-		//fail("Not yet implemented");
+		fail("Not yet implemented");
 	}
 
 	@Test
-	public void testGetlastLocalFileList() {
-		//fail("Not yet implemented");
+	public void testGetLastLocalFileList() {
+		fail("Not yet implemented");
 	}
 
 	@Test
 	public void testGetNowLocalFileList() {
-		//fail("Not yet implemented");
+		fail("Not yet implemented");
 	}
 
 	@Test
 	public void testBackupNowLocalFileInfo() {
-		//fail("Not yet implemented");
+		fail("Not yet implemented");
 	}
 
 }
