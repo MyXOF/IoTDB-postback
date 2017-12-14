@@ -20,6 +20,8 @@ before_install:
   - cd tsfile 
 #  - git checkout hxd_tsfile_sdk
   - mvn install -Dmaven.test.skip=true
+  - cd ..
+  - ls -lh
 
 #script: 
 # only SNAPSHOT version needs to do the following phase
