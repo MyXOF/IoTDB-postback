@@ -21,6 +21,6 @@ before_install:
 #  - git checkout hxd_tsfile_sdk
   - mvn install -Dmaven.test.skip=true
 
-script: 
+#script: 
 # only SNAPSHOT version needs to do the following phase
-  - mvn clean test
+#  - mvn clean test
