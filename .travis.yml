@@ -16,9 +16,9 @@ before_install:
 #  - ./configure --disable-gen-erl --disable-gen-hs --without-cpp --without-boost --without-qt4 --without-c_glib --without-csharp --without-erlang --without-python --without-perl --without-php --without-php_extension --without-ruby --without-haskell --without-go --without-d
 #  - sudo make install
 #  - cd ..
-
-  - git clone https://github.com/MyXOF/IoTDB-postback
-  - cd IoTDB-postback 
+  - git clone https://github.com/thulab/tsfile.git
+  - cd tsfile 
+#  - git checkout hxd_tsfile_sdk
   - mvn install -DskipTests=true
 
 script: 
