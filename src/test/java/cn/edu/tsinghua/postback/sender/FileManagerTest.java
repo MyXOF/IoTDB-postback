@@ -43,7 +43,9 @@ public class FileManagerTest {
 
 	@After
 	public void tearDown() throws Exception {
-		delete(new File(SENDER_FILE_PATH_TEST));
+		String POST_BACK_DIRECTORY = "src" + File.separator + "postback";
+		delete(new File(POST_BACK_DIRECTORY));
+		new File(POST_BACK_DIRECTORY).delete();
 	}
 
 	public void delete(File file) {
