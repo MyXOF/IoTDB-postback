@@ -8,4 +8,6 @@ public class Config {
 	public static final String LAST_FILE_INFO = POST_BACK_DIRECTORY + "lastLocalFileList.txt";
 	public static final String SENDER_FILE_PATH = POST_BACK_DIRECTORY + "data";
 	public static final String SNAPSHOT_PATH = POST_BACK_DIRECTORY + "dataSnapshot";
+	public static final String SERVER_IP = "127.0.0.1";
+	public static final int SERVER_PORT = 5555;
 }
