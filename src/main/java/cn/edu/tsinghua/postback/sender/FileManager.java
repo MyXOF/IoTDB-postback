@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import cn.edu.tsinghua.postback.Config;
 
 public class FileManager {
+	private Set<String> fileList = new HashSet<>();
 	private static final Logger LOGGER = LoggerFactory.getLogger(FileManager.class);
 	private static class FileManagerHolder{
 		private static final FileManager INSTANCE = new FileManager();
@@ -32,8 +32,8 @@ public class FileManager {
 		return FileManagerHolder.INSTANCE;
 	}
 
-	public List<String> getSendingFileList(Set<String> oldFiles, Set<String> newFiles) {
-		List<String> sendingFiles = new ArrayList<>();
+	public Set<String> getSendingFileList(Set<String> oldFiles, Set<String> newFiles) {
+		Set<String> sendingFiles = new HashSet<>();
 		for(String newFile : newFiles) {
 			if(!oldFiles.contains(newFile)) {
 				sendingFiles.add(newFile);
@@ -72,6 +72,7 @@ public class FileManager {
 	}
 
 	public Set<String> getNowLocalFileList(String path) {
+		/*
 		Set<String> fileList = new HashSet<>();
 		try (Stream<Path> filePathStream = Files.walk(Paths.get(path))) {
 			filePathStream.filter(Files::isRegularFile);
@@ -83,7 +84,27 @@ public class FileManager {
 			LOGGER.error("IoTDB post back sender: cannot get now local file list because {}", e);
 		}
 		return fileList;
+		*/
+		fileList.clear();
+		getFileList(path);
+			return fileList;
+				
 	}
+
+	//Recursively loop through the list of all files
+	public void getFileList(String filePath) {
+		File root = new File(filePath);
+		File[] files = root.listFiles();
+		for (File file : files) {
+			if (file.isDirectory()) {
+				getFileList(file.getPath()); 
+			} else {
+				String filename = file.getPath();
+				fileList.add(filename);
+			}
+		}
+	}
+
 
 	public void backupNowLocalFileInfo(String dataDirectory, String backupFile) {
 		BufferedWriter bufferedWriter = null;
