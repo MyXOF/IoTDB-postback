@@ -68,18 +68,13 @@ public class FileManager {
 		}
 		return fileList;
 	}
-	public static void main(String[] args) {
-		FileManager manager =FileManager.getInstance();
-		if(manager.getNowLocalFileList("F:\\workspace\\java\\eclipse\\PostBack\\src\\data").isEmpty())
-		System.out.println(manager.getNowLocalFileList("F:\\workspace\\java\\eclipse\\PostBack\\src\\data"));
-	}
 
 	public Set<String> getNowLocalFileList(String path) {
 		
 		Set<String> fileList = new HashSet<>();
 		try (Stream<Path> filePathStream = Files.walk(Paths.get(path))) {
 			filePathStream.filter(Files::isRegularFile).forEach(filePath -> {
-				fileList.add(filePath.toFile().getAbsolutePath());
+				fileList.add(filePath.toFile().getPath());
 			});
 		} catch (IOException e) {
 			LOGGER.error("IoTDB post back sender: cannot get now local file list because {}", e);

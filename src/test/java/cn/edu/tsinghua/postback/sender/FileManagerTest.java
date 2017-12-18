@@ -19,7 +19,6 @@ public class FileManagerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		//TODO create lastLocalFileList.txt
 		File file =new File(LAST_FILE_INFO_TEST);
 		if (!file.getParentFile().exists()) {
 			file.getParentFile().mkdirs();
@@ -64,7 +63,7 @@ public class FileManagerTest {
 				String rand = String.valueOf(r.nextInt(10000));
 				String fileName = SENDER_FILE_PATH_TEST + File.separator + String.valueOf(i) + File.separator + rand;
 				File file = new File(fileName);
-				allFileList.add(file.getAbsolutePath());
+				allFileList.add(file.getPath());
 				if (!file.getParentFile().exists()) {
 					file.getParentFile().mkdirs();
 				}
@@ -91,7 +90,7 @@ public class FileManagerTest {
 				String rand = String.valueOf(r.nextInt(10000));
 				String fileName = SENDER_FILE_PATH_TEST + File.separator + String.valueOf(i) + File.separator +rand;
 				File file = new File(fileName);
-				allFileList.add(file.getAbsolutePath());
+				allFileList.add(file.getPath());
 				if (!file.getParentFile().exists()) {
 					file.getParentFile().mkdirs();
 				}
@@ -133,7 +132,7 @@ public class FileManagerTest {
 				String rand = String.valueOf(r.nextInt(10000));
 				String fileName = SENDER_FILE_PATH_TEST + File.separator + String.valueOf(i) + File.separator + rand;
 				File file = new File(fileName);
-				allFileList.add(file.getAbsolutePath());
+				allFileList.add(file.getPath());
 				if (!file.getParentFile().exists()) {
 					file.getParentFile().mkdirs();
 				}
@@ -164,7 +163,7 @@ public class FileManagerTest {
 				String rand = String.valueOf(r.nextInt(10000));
 				String fileName = SENDER_FILE_PATH_TEST + File.separator + String.valueOf(i) + File.separator + rand;
 				File file = new File(fileName);
-				allFileList.add(file.getAbsolutePath());
+				allFileList.add(file.getPath());
 				if (!file.getParentFile().exists()) {
 					file.getParentFile().mkdirs();
 				}
@@ -198,8 +197,8 @@ public class FileManagerTest {
 				String rand = String.valueOf(r.nextInt(10000));
 				String fileName = SENDER_FILE_PATH_TEST + File.separator + String.valueOf(i) + File.separator + rand;
 				File file = new File(fileName);
-				allFileList.add(file.getAbsolutePath());
-				newFileList.add(file.getAbsolutePath());
+				allFileList.add(file.getPath());
+				newFileList.add(file.getPath());
 				if (!file.getParentFile().exists()) {
 					file.getParentFile().mkdirs();
 				}
@@ -233,8 +232,8 @@ public class FileManagerTest {
 				String rand = String.valueOf(r.nextInt(10000));
 				String fileName = SENDER_FILE_PATH_TEST + File.separator + String.valueOf(i) + File.separator + rand;
 				File file = new File(fileName);
-				allFileList.add(file.getAbsolutePath());
-				newFileList.add(file.getAbsolutePath());
+				allFileList.add(file.getPath());
+				newFileList.add(file.getPath());
 				if (!file.getParentFile().exists()) {
 					file.getParentFile().mkdirs();
 				}

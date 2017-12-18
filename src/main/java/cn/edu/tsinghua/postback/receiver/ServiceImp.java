@@ -10,14 +10,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ServiceImp implements Service.Iface {
-	private String uuid;
+	public static final String POST_BACK_DIRECTORY = "src" + File.separator + "postback" + File.separator;
+	public String uuid;
 	private static final Logger LOGGER = LoggerFactory.getLogger(ServiceImp.class);
 
-	public void getUUID(String uuid) throws TException {
+	public String getUUID(String uuid) throws TException {
 		this.uuid = uuid;
+		return this.uuid;
 	}
 
 	public String startReceiving(String md5, String filePath, ByteBuffer dataToReceive) throws TException {
+		filePath = POST_BACK_DIRECTORY + uuid + File.pathSeparator + filePath;
 		File file = new File(filePath);
 		if (!file.getParentFile().exists()) {
 			try {

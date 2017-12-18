@@ -30,10 +30,10 @@ public class TransferData {
 
 	private TTransport transport;
 	private Service.Client clientOfServer;
-	private String uuid;
+	public String uuid;
 	private static final Logger LOGGER = LoggerFactory.getLogger(TransferData.class);
 
-	private static class InitBeforeSendingHolder {
+	private static class TransferHolder {
 		private static final TransferData INSTANCE = new TransferData();
 	}
 
@@ -41,7 +41,7 @@ public class TransferData {
 	}
 
 	public static final TransferData getInstance() {
-		return InitBeforeSendingHolder.INSTANCE;
+		return TransferHolder.INSTANCE;
 	}
 
 	public void connection(String serverIP, int serverPort) {
@@ -55,7 +55,8 @@ public class TransferData {
 		}
 	}
 
-	public void transferUUID(String uuidPath) {
+	public String transferUUID(String uuidPath) {
+		String uuidOfReceiver = null;
 		File file = new File(uuidPath);
 		BufferedReader bf;
 		FileOutputStream out;
@@ -79,14 +80,14 @@ public class TransferData {
 			}
 		}
 		try {
-			clientOfServer.getUUID(uuid);
+			uuidOfReceiver = clientOfServer.getUUID(uuid);
 		} catch (TException e) {
 			LOGGER.error("IoTDB post back sender: cannot send UUID to receiver because {}", e);
 		}
-
+		return uuidOfReceiver;
 	}
 
-	public void fileSnapshot(Set<String> sendingFileList, String snapshotPath) {
+	public void fileSnapshot(Set<String> sendingFileList, String snapshotPath) throws InterruptedException {
 		try {
 			for (String filePath : sendingFileList) {
 				String newPath = snapshotPath + File.separator + filePath;
@@ -97,11 +98,12 @@ public class TransferData {
 				String os = System.getProperty("os.name");
 				if (os.toLowerCase().startsWith("windows")) {
 					String cmdCommandWin = "cmd /c mklink /H %s %s";
-					String cmdCommand = String.format(cmdCommandWin, newPath, filePath);
+					String cmdCommand = String.format(cmdCommandWin, new File(newPath).getAbsolutePath(), new File(filePath).getAbsolutePath());
 					Runtime.getRuntime().exec(cmdCommand);
+					Thread.sleep(30);
 				} else {
 					String commandLinux = "ln source %s %s";
-					String[] command = new String[] { "/bin/sh", "-c", String.format(commandLinux, newPath, filePath) };
+					String[] command = new String[] { "/bin/sh", "-c", String.format(commandLinux, new File(newPath).getAbsolutePath(), new File(filePath).getAbsolutePath()) };
 					Runtime.getRuntime().exec(command);
 				}
 			}
@@ -170,8 +172,21 @@ public class TransferData {
 
 	}
 
-	public void afterSending() {
-		// TODO Auto-generated method stub
+	public void afterSending(String snapshotPath) {
+		deleteSnapshot(new File(snapshotPath));
 
+	}
+	
+	public void deleteSnapshot(File file) {
+		if (file.isFile() || file.list().length == 0) {
+			file.delete();
+		} 
+		else{
+			File[] files = file.listFiles();
+			for (File f : files) {
+				deleteSnapshot(f);        
+				f.delete();       
+			}
+		}		
 	}
 }
