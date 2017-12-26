@@ -1,4 +1,4 @@
-package cn.edu.tsinghua.postback.sender;
+package cn.edu.tsinghua.postback.iotdb.sender;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -16,31 +16,38 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.edu.tsinghua.postback.Config;
+import cn.edu.tsinghua.iotdb.postback.Config;
 
 public class FileManager {
+	
+	private Set<String> sendingFiles;
+	private Set<String> lastLocalFiles;
+	private Set<String> nowLocalFiles;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(FileManager.class);
 	private static class FileManagerHolder{
 		private static final FileManager INSTANCE = new FileManager();
 	}
-	
 	private FileManager() {}
+	
 
 	public static final FileManager getInstance() {
 		return FileManagerHolder.INSTANCE;
 	}
 
-	public Set<String> getSendingFileList(Set<String> oldFiles, Set<String> newFiles) {
-		Set<String> sendingFiles = new HashSet<>();
+	public void getSendingFileList() {
+		Set<String> oldFiles = lastLocalFiles;
+		Set<String> newFiles = nowLocalFiles;
+		Set<String> fileList = new HashSet<>();
 		for(String newFile : newFiles) {
 			if(!oldFiles.contains(newFile)) {
-				sendingFiles.add(newFile);
+				fileList.add(newFile);
 			}
 		}
-		return sendingFiles;
+		sendingFiles = fileList;
 	}
 
-	public Set<String> getLastLocalFileList(String path)  {
+	public void getLastLocalFileList(String path)  {
 		Set<String> fileList = new HashSet<>();
 		File file = new File(path);
 		try {
@@ -66,27 +73,27 @@ public class FileManager {
 		} catch (IOException e) {
 			LOGGER.error("IoTDB post back sender: cannot get last pass local file list because {}", e);
 		}
-		return fileList;
+		lastLocalFiles = fileList;
 	}
 
-	public Set<String> getNowLocalFileList(String path) {
+	public void getNowLocalFileList(String path) {
 		
 		Set<String> fileList = new HashSet<>();
 		try (Stream<Path> filePathStream = Files.walk(Paths.get(path))) {
 			filePathStream.filter(Files::isRegularFile).forEach(filePath -> {
-				fileList.add(filePath.toFile().getPath());
+				fileList.add(filePath.toFile().getAbsolutePath());
 			});
 		} catch (IOException e) {
 			LOGGER.error("IoTDB post back sender: cannot get now local file list because {}", e);
 		}
-		return fileList;		
+		nowLocalFiles = fileList;		
 	}
 
-	public void backupNowLocalFileInfo(String dataDirectory, String backupFile) {
+	public void backupNowLocalFileInfo(String backupFile) {
 		BufferedWriter bufferedWriter = null;
 		try {
 			bufferedWriter = new BufferedWriter(new FileWriter(backupFile));
-			for(String file : getNowLocalFileList(dataDirectory)) {
+			for(String file : nowLocalFiles) {
 				bufferedWriter.write(file+"\n");
 			}
 		} catch (IOException e) {
@@ -100,5 +107,19 @@ public class FileManager {
 				}
 			}
 		}
+	}
+
+	public Set<String> getSendingFiles() {
+		return sendingFiles;
+	}
+
+
+	public Set<String> getLastLocalFiles() {
+		return lastLocalFiles;
+	}
+
+
+	public Set<String> getNowLocalFiles() {
+		return nowLocalFiles;
 	}
 }

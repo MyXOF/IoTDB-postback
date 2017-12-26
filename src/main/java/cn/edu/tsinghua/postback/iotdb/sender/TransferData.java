@@ -1,4 +1,4 @@
-package cn.edu.tsinghua.postback.sender;
+package cn.edu.tsinghua.postback.iotdb.sender;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -10,7 +10,16 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -23,14 +32,22 @@ import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.edu.tsinghua.postback.receiver.Service;
-import cn.edu.tsinghua.postback.Config;
+import cn.edu.tsinghua.iotdb.client.AbstractClient;
+import cn.edu.tsinghua.iotdb.jdbc.TsfileConnection;
+import cn.edu.tsinghua.iotdb.jdbc.TsfileJDBCConfig;
+import cn.edu.tsinghua.iotdb.postback.Config;
+import cn.edu.tsinghua.postback.iotdb.receiver.ServerManager;
+import cn.edu.tsinghua.postback.iotdb.receiver.Service;
+
+import org.json.JSONObject;
 
 public class TransferData {
 
 	private TTransport transport;
 	private Service.Client clientOfServer;
-	public String uuid;
+	private Set<String> schema = new HashSet<>();
+	private String uuid;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(TransferData.class);
 
 	private static class TransferHolder {
@@ -87,49 +104,44 @@ public class TransferData {
 		return uuidOfReceiver;
 	}
 
-	public void fileSnapshot(Set<String> sendingFileList, String snapshotPath) throws InterruptedException {
+	public void makeFileSnapshot(Set<String> sendingFileList, String snapshotPath, String iotdbPath) throws InterruptedException {
 		try {
 			for (String filePath : sendingFileList) {
-				String newPath = snapshotPath + File.separator + filePath;
+				String relativeFilePath = filePath.substring(iotdbPath.length());
+				String newPath = snapshotPath + File.separator + relativeFilePath;
 				File newfile = new File(newPath);
 				if (!newfile.getParentFile().exists()) { 
 					newfile.getParentFile().mkdirs();
 				}
-				String os = System.getProperty("os.name");
-				if (os.toLowerCase().startsWith("windows")) {
-					String cmdCommandWin = "cmd /c mklink /H %s %s";
-					String cmdCommand = String.format(cmdCommandWin, new File(newPath).getAbsolutePath(), new File(filePath).getAbsolutePath());
-					Runtime.getRuntime().exec(cmdCommand);
-					Thread.sleep(30);
-				} else {
-					String commandLinux = "ln source %s %s";
-					String[] command = new String[] { "/bin/sh", "-c", String.format(commandLinux, new File(newPath).getAbsolutePath(), new File(filePath).getAbsolutePath()) };
-					Runtime.getRuntime().exec(command);
-				}
+				Path link = FileSystems.getDefault().getPath(newPath);   
+				Path target = FileSystems.getDefault().getPath(filePath);   
+				Files.createLink(link, target);
 			}
 		} catch (IOException e) {
 			LOGGER.error("IoTDB post back sender: cannot make fileSnapshot because {}", e);
 		}
 	}
 
-	void startSending(Set<String> fileList, String snapshotPath) {
+	public void startSending(Set<String> fileList, String snapshotPath, String iotdbPath) {
 		try {
 			for (String filePath : fileList) {
-				String dataPath = snapshotPath + File.separator + filePath;
+				String relativeFilePath = filePath.substring(iotdbPath.length());
+				String dataPath = snapshotPath + File.separator + relativeFilePath;
 				File file = new File(dataPath);
 				byte[] bytes = toByteArray(dataPath);
 				ByteBuffer buffToSend = ByteBuffer.wrap(bytes);
 
 				FileInputStream fis = new FileInputStream(file);
 				MessageDigest md = MessageDigest.getInstance("MD5");
-				byte[] buffer = new byte[1024];
+				byte[] buffer = new byte[10240];
 				int length = -1;
-				while ((length = fis.read(buffer, 0, 1024)) != -1) {
+				while ((length = fis.read(buffer, 0, 10240)) != -1) {
 					md.update(buffer, 0, length);
 				}
 				String md5OfSender = (new BigInteger(1, md.digest())).toString(16);
 
 				while (true) {
+					filePath = filePath.substring(iotdbPath.length());
 					String md5OfReceiver = clientOfServer.startReceiving(md5OfSender, filePath, buffToSend);
 					if (md5OfSender.equals(md5OfReceiver)) {
 						break;
@@ -162,9 +174,45 @@ public class TransferData {
 		return buffer;
 	}
 
-	public void sendSchema() {
-		// TODO Auto-generated method stub
-
+	public void getSchema(String schemaPath) throws ClassNotFoundException, SQLException, IOException, InterruptedException{
+		BufferedReader bf = new BufferedReader(new FileReader(schemaPath));
+		String data;
+		schema.clear();
+		while((data = bf.readLine())!=null)
+		{
+			String item[] = data.split(",");
+			if(item[0].equals("2"))
+			{
+				String sql = "SET STORAGE GROUP TO " + item[1];
+				schema.add(sql);
+			}
+			else if(item[0].equals("0"))
+			{
+				String sql = "CREATE TIMESERIES " + item[1] + " WITH DATATYPE=" + item[2] + ", ENCODING=" + item[3];
+				schema.add(sql);
+			}
+		}
+		bf.close();
+	}
+	
+	public void sendSchema() throws ClassNotFoundException, SQLException, IOException, InterruptedException{
+		for(String sql:schema)
+		{
+			try {
+				clientOfServer.getSchema(sql);
+			} catch (TException e) {}
+		}
+	}
+	
+	public static void main(String[] args) throws ClassNotFoundException, SQLException, IOException, InterruptedException {
+		TransferData transferData = TransferData.getInstance();
+		ServerManager serverManager = ServerManager.getInstance();
+		serverManager.startServer(5555);
+		transferData.connection("127.0.0.1", 5555);
+		String path = "D:\\iotdb-v0.3.0\\data\\metadata\\mlog.txt";
+		transferData.getSchema(path);
+		transferData.sendSchema();
+		serverManager.closeServer();
 	}
 
 	public void stop() {
@@ -188,5 +236,13 @@ public class TransferData {
 				f.delete();       
 			}
 		}		
+	}
+	
+	public Set<String> getSchema() {
+		return schema;
+	}
+	
+	public String getUuid() {
+		return uuid;
 	}
 }

@@ -1,4 +1,4 @@
-package cn.edu.tsinghua.postback.receiver;
+package cn.edu.tsinghua.postback.iotdb.receiver;
 
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TBinaryProtocol;
